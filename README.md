@@ -1,6 +1,6 @@
 # Montgomery Multiplication Project
-  This project revolves around the implementation of the Fast Modular Pipelined multiplication,  
-  firstly introduced by Peter Montgomery. The project consist of simple menu for user to import  
+  This project revolves around the implementation of the Fast Modular Pipelined multiplication,firstly introduced by Peter Montgomery.  
+  The project consist of simple menu for user to import
   their own factors of either direct multiplication or exponantiation.  
 
 # Multiplication scheme
