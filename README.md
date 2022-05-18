@@ -42,7 +42,7 @@ def modMul(x, y, n):
     product = monPro(montg_product, 1, r, n, bit_width)
     return product
 ```
-# Exponantiation scheme:
+# Exponantiation scheme
 ```python
 # Main function calculating the (a ^ e mod n)
 # basing on the Fast Montgomery Pipelined Exponentiation algorithm.
