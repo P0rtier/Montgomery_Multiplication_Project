@@ -10,14 +10,30 @@ def calculate_residuum_n(a, r, modulo):
     return a
 
 
-# Additional helping function that can calculate the inverse of the negative modulus
+# Additional function that can calculate the inverse of the negative modulus
 # basing on a Extended Euclidean algorithm and fulfilling the equation:
 # r * r^(-1) - n * n' = 1, giving n' = (-n)^(-1)
 
 def neg_inv(n, bit_width, base):
-    phi_base = 2 ** (bit_width - 1)
-    m_neginv = base - n ** (phi_base - 1) % base
-    return m_neginv
+    def_base = 2 ** (bit_width - 1)
+    neg_inverse = base - n ** (def_base - 1) % base
+    return neg_inverse
+
+
+# Alternative version that calculates n'
+
+def alternative_neg_inv(n, r):
+    r_inverse = 0
+    n_prim = 0
+    for i in range(0, r):
+        if (r * i) % n == 1:
+            r_inverse = i
+            break
+    for i in range(0, n):
+        if r * r_inverse - n * i == 1:
+            n_prim = i
+            break
+    return n_prim
 
 
 # Function monPro gives the direct product of the modular multiplication
@@ -32,7 +48,7 @@ def neg_inv(n, bit_width, base):
 
 def monPro(a, b, r, n, bit_width):
     t = a * b % r
-    m = (t * neg_inv(n, bit_width, r)) % r
+    m = (t * alternative_neg_inv(n, r)) % r
     s = (a * b + m * n)/r
     if s >= n:
         return s - n
@@ -48,7 +64,9 @@ def monPro(a, b, r, n, bit_width):
 # Lastly the function uses the fast - inverse algorithm
 # that re-converts the result from Montgomery space.
 
-def modMul(x, y, n, r, bit_width):
+def modMul(x, y, n):
+    bit_width = calc_r(n)
+    r = 2 ** bit_width
     a = x * r % n
     b = y * r % n
     montg_product = monPro(a, b, r, n,bit_width)
@@ -157,10 +175,8 @@ def callMenu():
                         holdback = input("\nPress Enter to continue:\n")
                     else:
                         print('Expected (x * y mod n) result:', x * y % n)
-                        k = calc_r(n)
-                        r = 2 ** k
                         start_montg = time.time()
-                        wynik = modMul(x, y, n, r, k)
+                        wynik = modMul(x, y, n)
                         end_montg = time.time()
                         print('Montgomery Scheme result:', int(wynik))
                         print('Elapsed time of the algorithm [s]: ', round(end_montg - start_montg,5))
@@ -194,6 +210,7 @@ def callMenu():
                 break
             else:
                 continue
+
 
 # Start:
 callMenu()
