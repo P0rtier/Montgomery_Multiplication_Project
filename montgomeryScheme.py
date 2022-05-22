@@ -48,7 +48,7 @@ def alternative_neg_inv(n, r):
 
 def monPro(a, b, r, n, bit_width):
     t = a * b % r
-    m = (t * alternative_neg_inv(n, r)) % r
+    m = (t * neg_inv(n,bit_width, r)) % r
     s = (a * b + m * n)/r
     if s >= n:
         return s - n
