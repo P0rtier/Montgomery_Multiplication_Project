@@ -1,5 +1,6 @@
 # preparations
 import time
+import math
 
 
 # Calculating residuum a in n, so a number in the Montgomery space
@@ -54,6 +55,13 @@ def monPro(a, b, r, n, bit_width):
         return s - n
     else:
         return s
+
+
+# Additional function returning coefficient m
+def monProM(a, b, r, n, bit_width):
+    t = a * b
+    m = ((t % r) * neg_inv(n, bit_width, r)) % r
+    return m
 
 
 # Function modMul is the main engine of the modular
@@ -149,12 +157,101 @@ def montg_notEven(a, e, n):
     return x1 + q*y
 
 
+# Alternative function that calculates n'
+# via equation represented in the article:
+# p' = -p^-1 = P = 2 + x mod 2^(k+2)
+# where x = 0 if k+2 <= 2e_2
+# or x = 2^(2_e2)*3^(2_e3) mod 2^(k+2) if 2e_2 < k+2 <= 3e_2
+
+def neg_invAlternate(n,k,e2,e3):
+    x = 0
+    if k+2 <= 2*e2:
+        x = 0
+    elif 2*e2 < k+2 <= 3*e2:
+        x = (pow(2,2*e2) * pow(3,2*e3)) % pow(2,k+2)
+    return n + 2 + x % pow(2,k+2)
+
+
+# This function encodes the given y into the notation
+# presented in the main task article, knowing that 2e_2
+# bits of P' (n') and P + 2 are equal, we can
+# define particular bits of elements as:
+# Y_a ^ (B) = (Y mod B) >> a
+# where >> is interpreted as a-sequence right shift (binary)
+def give_newY(y,a,b):
+    y1 = (y % pow(2,b))
+    y1 >>= a
+    return y1
+
+
+# Main function of pipelined multiplication with coefficients,
+# that are calculated via equations given in the main task article.
+# Function returns result in the montgomery domain, hence for the appropriate
+# interpretation, result must be further re-calculated to the standard domain.
+# The coefficients of the multiplication are printed out on the terminal.
+def alternativeModularMultiplication3(e2,e3,x,y):
+    n = (pow(2,e2) * pow(3,e3)) - 1
+    bit_width = calc_r(n)
+    r = 2**calc_r(n)
+    x = x * r % n
+    y = y * r % n
+    k = e2 + math.ceil(math.log2(pow(3,e3)))
+    t = x*y
+    n_prim = neg_invAlternate(n,k,e2,e3)
+    #n_prim = neg_inv(n,bit_width,r)
+
+    # coefficient C:
+    t_temp = give_newY(t,e2,k+2-e2)
+    n_prim_temp = give_newY(n_prim,e2,k+2-e2)
+    C = t_temp * n_prim_temp
+
+    # coefficient D:
+    t_temp = give_newY(t,0,k+2-(2*e2))
+    n_prim_temp = give_newY(n_prim,2*e2,k+2)
+    D = t_temp * n_prim_temp
+
+    # coefficient E:
+    t_temp = give_newY(t,0,e2)
+    n_prim_temp = give_newY(n_prim,e2,2*e2)
+    E = t_temp * n_prim_temp
+    m = (pow(2,2*e2)*((C+D) % pow(2,k+2-(2*e2))) + pow(2,e2) * give_newY(t,e2,k+2)
+         + pow(2,e2)*E) % (pow(2,k+2) + give_newY(t,0,e2))
+    m = monProM(x, y, r, n, bit_width)
+    m = pow(2,e2) * give_newY(m,e2,k+2) + give_newY(t,0,e2)
+
+    # coefficient F:
+    m_temp = give_newY(m,e2,k+2)
+    n_temp = give_newY(n,2*e2,k+2)
+    n_prim_temp = give_newY(n_prim,e2,2*e2)
+    F = m_temp * (pow(2,e2) * n_temp + n_prim_temp)
+
+    # coefficient G:
+    t_temp = give_newY(t,0,e2)
+    n_temp = give_newY(n,2*e2,k+2)
+    G = t_temp * n_temp
+
+    MP = pow(2,2*e2) * F + pow(2,2*e2) * G + pow(2,e2) * E - m
+    s = (t + MP) / r
+    print("Coefficients of the multiplication:\n"
+          "C: " + str(C) +
+          "\nD: " + str(D) +
+          "\nE: " + str(E) +
+          "\nG: " + str(G) +
+          "\nF: " + str(F) +
+          "\nM: " + str(m))
+    if s >= n:
+        return s - n
+    else:
+        return s
+
+
 def callMenu():
     while True:
         print("=====Montgomery Pipeline Multiplication and Exponentiation=====\n"
               "1. Multiplication\n"
               "2. Exponentiation\n"
-              "3. Exit\n"
+              "3. Pipelined coefficient multiplication\n"
+              "4. Exit\n"
               "Choice: ")
         try:
             choice = int(input())
@@ -207,6 +304,25 @@ def callMenu():
                         print('Elapsed time of the algorithm [s]: ', round(end_montg - start_montg,5))
                         holdback = input("\nPress Enter to continue:\n")
             if choice == 3:
+                print("Calculator represents the x * y mod n\n"
+                      "n = (2^e2)*(3^e3) - 1\n"
+                      "Multiplication is executed via pipelined coefficients")
+                try:
+                    x = int(input("Insert x: "))
+                    y = int(input("Insert y: "))
+                    e2 = int(input("Insert e2: "))
+                    e3 = int(input("Insert e2: "))
+                except:
+                    print("x,y,e2 and e3 must be Integers!!\n")
+                else:
+                    n = (pow(2,e2) * pow(3,e3)) - 1
+                    bit_width = calc_r(n)
+                    r = 2**bit_width
+                    mid = alternativeModularMultiplication3(e2,e3,x,y)
+                    print('Expected (x * y mod n) result:', x * y % n)
+                    print('Montgomery Scheme result:', int(monPro(mid,1,r,n,bit_width)))
+                    holdback = input("\nPress Enter to continue:\n")
+            if choice == 4:
                 break
             else:
                 continue

@@ -89,8 +89,6 @@ def alternativeModularMultiplication3(e2,e3,x,y):
     n_temp = give_newY(n,2*e2,k+2)
     G = t_temp * n_temp
     MP = pow(2,2*e2) * F + pow(2,2*e2) * G + pow(2,e2) * E - m
-    #m = monProM(x, y, r, n, bit_width)
-    #m = pow(2,e2)*give_newY(m,e2,k+2) + give_newY(t,0,e2)
     s = (t + MP) / r
     print("Coefficients of the multiplication:\n"
           "C: " + str(C)+
