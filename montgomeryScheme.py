@@ -159,7 +159,7 @@ def montg_notEven(a, e, n):
 
 # Alternative function that calculates n'
 # via equation represented in the article:
-# p' = -p^-1 = P = 2 + x mod 2^(k+2)
+# p' = -p^-1 = p + 2 + x mod 2^(k+2)
 # where x = 0 if k+2 <= 2e_2
 # or x = 2^(2_e2)*3^(2_e3) mod 2^(k+2) if 2e_2 < k+2 <= 3e_2
 
@@ -178,6 +178,7 @@ def neg_invAlternate(n,k,e2,e3):
 # define particular bits of elements as:
 # Y_a ^ (B) = (Y mod B) >> a
 # where >> is interpreted as a-sequence right shift (binary)
+
 def give_newY(y,a,b):
     y1 = (y % pow(2,b))
     y1 >>= a
@@ -189,6 +190,7 @@ def give_newY(y,a,b):
 # Function returns result in the montgomery domain, hence for the appropriate
 # interpretation, result must be further re-calculated to the standard domain.
 # The coefficients of the multiplication are printed out on the terminal.
+
 def alternativeModularMultiplication3(e2,e3,x,y):
     n = (pow(2,e2) * pow(3,e3)) - 1
     bit_width = calc_r(n)
@@ -311,7 +313,7 @@ def callMenu():
                     x = int(input("Insert x: "))
                     y = int(input("Insert y: "))
                     e2 = int(input("Insert e2: "))
-                    e3 = int(input("Insert e2: "))
+                    e3 = int(input("Insert e3: "))
                 except:
                     print("x,y,e2 and e3 must be Integers!!\n")
                 else:
