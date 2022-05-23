@@ -64,7 +64,7 @@ def monProM(a, b, r, n, bit_width):
     return m
 
 
-# Function modMul is the main engine of the modular
+# Function montgomeryMultiplication is the main engine of the modular
 # multiplication algorithm, where multiplier and multiplicand
 # are firstly converted in the Montgomery space
 # and then the monPro func is called where the direct
@@ -133,7 +133,7 @@ def n_even(n):
             return n, j
 
 
-# montg_notEven function calculates the
+# montgExp_notEvenModulus function calculates the
 # Montgomery exponentiation scheme when n is even
 # it uses the montg_Exp function and a specified algorith
 # which bases on the results of n_even function
