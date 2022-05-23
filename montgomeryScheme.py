@@ -181,7 +181,8 @@ def neg_invAlternate(n,k,e2,e3):
 
 def give_newY(y,a,b):
     y1 = (y % pow(2,b))
-    y1 >>= a
+    if(y1!=0):
+        y1 >>= a
     return y1
 
 
