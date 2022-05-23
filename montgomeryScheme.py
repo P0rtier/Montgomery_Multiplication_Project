@@ -15,7 +15,7 @@ def calculate_residuum_n(a, r, modulo):
 # basing on a Extended Euclidean algorithm and fulfilling the equation:
 # r * r^(-1) - n * n' = 1, giving n' = (-n)^(-1)
 
-def neg_inv(n, bit_width, base):
+def negative_inverse_calc(n, bit_width, base):
     def_base = 2 ** (bit_width - 1)
     neg_inverse = base - n ** (def_base - 1) % base
     return neg_inverse
@@ -37,7 +37,7 @@ def alternative_neg_inv(n, r):
     return n_prim
 
 
-# Function monPro gives the direct product of the modular multiplication
+# Function directMontgMultProduct gives the direct product of the modular multiplication
 # where multiplier and multiplicand are already converted into
 # the Montgomery space
 # Elements of the func:
@@ -47,9 +47,9 @@ def alternative_neg_inv(n, r):
 #       fulfills the r = 2^k <=> 2^(k-1) <= n < 2^k
 #   bit_width - additional variable defining exponent of r
 
-def monPro(a, b, r, n, bit_width):
+def directMontgMultProduct(a, b, r, n, bit_width):
     t = a * b % r
-    m = (t * neg_inv(n,bit_width, r)) % r
+    m = (t * negative_inverse_calc(n, bit_width, r)) % r
     s = (a * b + m * n)/r
     if s >= n:
         return s - n
@@ -60,7 +60,7 @@ def monPro(a, b, r, n, bit_width):
 # Additional function returning coefficient m
 def monProM(a, b, r, n, bit_width):
     t = a * b
-    m = ((t % r) * neg_inv(n, bit_width, r)) % r
+    m = ((t % r) * negative_inverse_calc(n, bit_width, r)) % r
     return m
 
 
@@ -72,13 +72,13 @@ def monProM(a, b, r, n, bit_width):
 # Lastly the function uses the fast - inverse algorithm
 # that re-converts the result from Montgomery space.
 
-def modMul(x, y, n):
+def montgomeryMultiplication(x, y, n):
     bit_width = calc_r(n)
     r = 2 ** bit_width
     a = x * r % n
     b = y * r % n
-    montg_product = monPro(a, b, r, n,bit_width)
-    product = monPro(montg_product, 1, r, n, bit_width)
+    montg_product = directMontgMultProduct(a, b, r, n, bit_width)
+    product = directMontgMultProduct(montg_product, 1, r, n, bit_width)
     return product
 
 
@@ -97,17 +97,17 @@ def calc_r(n):
 # The only difference in the elements of the func is the parameter e:
 # Exponent of the main task
 
-def montg_Exp(x,e,n):
+def montgomeryExponentiation(x, e, n):
     bit_width = calc_r(n)
     r = 2**bit_width
     A = x * r % n
     X = 1 * r % n
     e_binary = format(e, "b")
     for digits in e_binary:
-        X = monPro(X, X, r, n, bit_width)
+        X = directMontgMultProduct(X, X, r, n, bit_width)
         if digits == '1':
-            X = monPro(A, X, r, n, bit_width)
-    X = monPro(X, 1, r, n, bit_width)
+            X = directMontgMultProduct(A, X, r, n, bit_width)
+    X = directMontgMultProduct(X, 1, r, n, bit_width)
     return X
 
 
@@ -143,9 +143,9 @@ def n_even(n):
 #           n = q * 2^j
 
 
-def montg_notEven(a, e, n):
+def montgExp_notEvenModulus(a, e, n):
     q, j = n_even(n)
-    x1 = montg_Exp(a, e, q)
+    x1 = montgomeryExponentiation(a, e, q)
     quotient = 2**j
     x2 = pow(a, e) % quotient
     q_inverse = 0
@@ -219,6 +219,7 @@ def alternativeModularMultiplication3(e2,e3,x,y):
     E = t_temp * n_prim_temp
     m = (pow(2,2*e2)*((C+D) % pow(2,k+2-(2*e2))) + pow(2,e2) * give_newY(t,e2,k+2)
          + pow(2,e2)*E) % (pow(2,k+2) + give_newY(t,0,e2))
+    # !!! Do omowienia kodu usun 223, przywroc do kodu na koncu sprawka !!!
     m = monProM(x, y, r, n, bit_width)
     m = pow(2,e2) * give_newY(m,e2,k+2) + give_newY(t,0,e2)
 
@@ -276,7 +277,7 @@ def callMenu():
                     else:
                         print('Expected (x * y mod n) result:', x * y % n)
                         start_montg = time.time()
-                        wynik = modMul(x, y, n)
+                        wynik = montgomeryMultiplication(x, y, n)
                         end_montg = time.time()
                         print('Montgomery Scheme result:', int(wynik))
                         print('Elapsed time of the algorithm [s]: ', round(end_montg - start_montg,5))
@@ -293,7 +294,7 @@ def callMenu():
                     if n % 2 == 0:
                         print('Expected (a^e mod n) result:',pow(a,e) % n)
                         start_montg = time.time()
-                        wynik = montg_notEven(a,e,n)
+                        wynik = montgExp_notEvenModulus(a, e, n)
                         end_montg = time.time()
                         print('Montgomery Scheme result:', int(wynik))
                         print('Elapsed time of the algorithm [s]: ', round(end_montg - start_montg,5))
@@ -301,7 +302,7 @@ def callMenu():
                     else:
                         print('Expected (a^e mod n) result:', pow(a, e) % n)
                         start_montg = time.time()
-                        wynik = montg_Exp(a, e, n)
+                        wynik = montgomeryExponentiation(a, e, n)
                         end_montg = time.time()
                         print('Montgomery Scheme result:', int(wynik))
                         print('Elapsed time of the algorithm [s]: ', round(end_montg - start_montg,5))
@@ -323,7 +324,7 @@ def callMenu():
                     r = 2**bit_width
                     mid = alternativeModularMultiplication3(e2,e3,x,y)
                     print('Expected (x * y mod n) result:', x * y % n)
-                    print('Montgomery Scheme result:', int(monPro(mid,1,r,n,bit_width)))
+                    print('Montgomery Scheme result:', int(directMontgMultProduct(mid, 1, r, n, bit_width)))
                     holdback = input("\nPress Enter to continue:\n")
             if choice == 4:
                 break
